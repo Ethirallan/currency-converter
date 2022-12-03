@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CurrencyModule } from './currency/currency.module';
 import { TypeOrmConfigService } from './shared/typeorm.service';
+import { AuthMiddleware } from './middleware/auth.middleware';
 
 @Module({
   imports: [
@@ -13,4 +14,14 @@ import { TypeOrmConfigService } from './shared/typeorm.service';
   controllers: [],
   providers: [],
 })
-export class AppModule { }
+export default class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware)
+      .exclude(
+        { path: 'currency/getLastConversionRates/:secret', method: RequestMethod.ALL },
+      )
+      .forRoutes({
+        path: '*', method: RequestMethod.ALL
+      });
+  }
+}

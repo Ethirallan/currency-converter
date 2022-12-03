@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { CurrencyService } from './currency.service';
 import { HttpService } from '@nestjs/axios';
 import { XMLValidator, XMLParser } from 'fast-xml-parser';
@@ -28,16 +28,18 @@ export class CurrencyController {
 
   @Post('convert')
   async convert(@Body() body: ConvertPayload) {
-    console.log(body);
-    const rateFrom = await this.currencyService.getCurrencyRateByCurrencyId(body.currencyFrom);
-    const rateTo = await this.currencyService.getCurrencyRateByCurrencyId(body.currencyTo);
+    const currencyFrom = await this.currencyService.getCurrencyRateByCurrencyId(body.currencyFrom);
+    const currencyTo = await this.currencyService.getCurrencyRateByCurrencyId(body.currencyTo);
 
-    return new Big(rateTo.rate / rateFrom.rate * body.amount).toFixed(5);
+    return new Big(currencyTo.rate / currencyFrom.rate * body.amount).toFixed(5);
   }
 
-  // daily cron job
-  @Get('getLastConversionRates')
-  async getLastConversionRates() {
+  // daily cron job @ 17:00
+  @Get('getLastConversionRates/:secret')
+  async getLastConversionRates(@Param('secret') secret: string) {
+    if (secret != process.env.SECRET) {
+      return false;
+    }
     const ratesEU = await this.httpService.axiosRef.get('https://www.bsi.si/_data/tecajnice/dtecbs.xml');
     const ratesOthers = await this.httpService.axiosRef.get('https://bankaslovenije.blob.core.windows.net/extra-files/EksotTecBS.xml');
 
@@ -70,7 +72,7 @@ export class CurrencyController {
       }
 
       this.currencyService.insertCurrencyRates(newRates);
-      return newRates;
+      return true;
     }
   }
 }
