@@ -38,7 +38,7 @@ export class CurrencyController {
   @Get('getLastConversionRates/:secret')
   async getLastConversionRates(@Param('secret') secret: string) {
     if (secret != process.env.SECRET) {
-      return false;
+      return;
     }
     const ratesEU = await this.httpService.axiosRef.get('https://www.bsi.si/_data/tecajnice/dtecbs.xml');
     const ratesOthers = await this.httpService.axiosRef.get('https://bankaslovenije.blob.core.windows.net/extra-files/EksotTecBS.xml');
@@ -49,8 +49,8 @@ export class CurrencyController {
       const options = {
         ignoreAttributes: false
       }
-
       const parser = new XMLParser(options);
+
       const jsonEU = parser.parse(ratesEU.data);
       const jsonOthers = parser.parse(ratesOthers.data);
 
@@ -72,7 +72,6 @@ export class CurrencyController {
       }
 
       this.currencyService.insertCurrencyRates(newRates);
-      return true;
     }
   }
 }

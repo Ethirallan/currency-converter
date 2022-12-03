@@ -42,7 +42,7 @@ export class CurrencyService {
     } catch (error) {
       throw new NotFoundException();
     }
-  } 
+  }
 
   getCurrencyRateByCurrencyId(id: number) {
     try {
@@ -51,7 +51,10 @@ export class CurrencyService {
           currency: {
             id: id
           }
-        }
+        },
+        order: {
+          id: 'DESC',
+        },
       });
       return rate;
     } catch (error) {
